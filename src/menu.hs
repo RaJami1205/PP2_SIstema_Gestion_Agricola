@@ -10,6 +10,7 @@ mostrarMenu = do
     putStrLn "1. Opciones Operativas"
     putStrLn "2. Opciones Generales"
     putStrLn "3. Salir"
+    putStrLn "Prueba commit"
     putStr "Ingrese una opción: "
 
 mainMenu :: IO ()
