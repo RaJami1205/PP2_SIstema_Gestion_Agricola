@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+
+-- src/Trabajadores.hs
 module Trabajadores (Trabajador(..), cargarTrabajadores) where
 -- El (..) exporta el tipo y todos sus campos
 

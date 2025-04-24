@@ -3,6 +3,7 @@
 -- src/Menu.hs
 module Menu where
 import Trabajadores (Trabajador(..), cargarTrabajadores)
+import OpcionesOperativas (registrarHerramientas)  
 import Data.List (find) 
 import System.IO (hFlush, stdout)
 
@@ -22,16 +23,18 @@ login = do
 -- Submenú de opciones operativas (ejemplo básico)
 opcionesOperativas :: IO ()
 opcionesOperativas = do
-    putStrLn "============================="
-    putStrLn "Opciones Operativas"
-    putStrLn "============================="
-    putStrLn "1. Registrar siembra"
-    putStrLn "2. Registrar cosecha"
-    putStrLn "3. Volver al menú principal"
+    putStrLn "=================================="
+    putStrLn "=      Opciones Operativas       ="
+    putStrLn "=================================="
+    putStrLn "1. Registrar Herramientas de Campo"
+    putStrLn "2. Registrar Parcelas de Cultivo"
+    putStrLn "3. Informe de Cosechas"
+    putStrLn "4. Volver"
     putStr "Ingrese una opción: "
     opcion <- getLine
     case opcion of
-        "3" -> mainMenu
+        "1" -> registrarHerramientas >> opcionesOperativas
+        "4" -> mainMenu
         _   -> do
             putStrLn "\nOpción no implementada aún.\n"
             opcionesOperativas
@@ -39,9 +42,9 @@ opcionesOperativas = do
 mostrarMenu :: IO ()
 mostrarMenu = do
     putStrLn "\n"
-    putStrLn "========================================="
-    putStrLn "Sistema de Gestion Finca Agricola Frucali"
-    putStrLn "========================================="
+    putStrLn "============================================="
+    putStrLn "= Sistema de Gestion Finca Agricola Frucali ="
+    putStrLn "============================================="
     putStrLn "1. Opciones Operativas"
     putStrLn "2. Opciones Generales"
     putStrLn "3. Salir"
