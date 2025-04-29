@@ -1,4 +1,5 @@
 -- main.hs
+module Main where
 import Menu (mainMenu)  -- Importa solo la función necesaria
 
 main :: IO ()

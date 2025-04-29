@@ -1,0 +1,19 @@
+name:               frucali
+version:            0.1.0.0
+build-type:         Simple
+cabal-version:      >=1.10
+
+executable frucali
+  main-is:          main.hs
+  hs-source-dirs:   ., src
+  other-modules:    Menu
+                  , OpcionesOperativas
+                  , Trabajadores
+  build-depends:    base >=4.17 && <5
+                  , text
+                  , directory
+                  , cassava
+                  , vector
+                  , bytestring
+                  , containers
+                  , random
