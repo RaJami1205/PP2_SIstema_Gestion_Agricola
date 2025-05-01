@@ -40,7 +40,7 @@ parcelMenu = do
             putStrLn "\nOpción no implementada aún.\n"
             parcelMenu
 
--- Submenú de opciones operativas (ejemplo básico)
+-- Submenú de opciones operativas 
 opcionesOperativas :: IO ()
 opcionesOperativas = do
     putStrLn "=================================="
@@ -60,6 +60,30 @@ opcionesOperativas = do
         _   -> do
             putStrLn "\nOpción no implementada aún.\n"
             opcionesOperativas
+
+-- Submenú de opciones generales
+opcionesGeneralesMenu :: IO ()
+opcionesGeneralesMenu = do
+    putStrLn "\n=================================="
+    putStrLn "=       Opciones Generales       ="
+    putStrLn "=================================="
+    putStrLn "1. Gestión de cosechas"
+    putStrLn "2. Cierre de cosecha"
+    putStrLn "3. Consultar cosecha"
+    putStrLn "4. Cancelación o modificación de cosecha"
+    putStrLn "5. Consulta de disponibilidad de parcela"
+    putStrLn "6. Volver"
+    putStr "Ingrese una opción: " >> hFlush stdout
+    
+    opcion <- getLine
+    case opcion of
+        "1" -> do putStrLn "\nEntrando a gestión de cosechas...\n"; opcionesGeneralesMenu
+        "2" -> do putStrLn "\nProcesando cierre de cosecha...\n"; opcionesGeneralesMenu
+        "3" -> do putStrLn "\nConsultando cosecha...\n"; opcionesGeneralesMenu
+        "4" -> do putStrLn "\nCancelando/Modificando cosecha...\n"; opcionesGeneralesMenu
+        "5" -> do putStrLn "\nConsultando disponibilidad...\n"; opcionesGeneralesMenu
+        "6" -> return ()
+        _   -> do putStrLn "\n¡Opción inválida!\n"; opcionesGeneralesMenu
 
 mostrarMenu :: IO ()
 mostrarMenu = do
@@ -85,6 +109,6 @@ mainMenu = do
                 Nothing -> do
                     putStrLn "\nCédula no registrada. Acceso denegado.\n"
                     mainMenu
-        "2" -> do putStrLn "\nEntrando a Opciones Generales...\n"; mainMenu
-        "3" -> putStrLn "\nSaliendo del sistema...\n"
+        "2" -> opcionesGeneralesMenu >> mainMenu
+        "3" -> putStrLn "\nHasta Pronto\n"
         _   -> do putStrLn "\n¡Opción inválida!\n"; mainMenu
