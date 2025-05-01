@@ -1,4 +1,5 @@
 COMANDOS DE COMPILACIÓN Y EJECUCIÓN
 
--- Cabal build
--- Cabal run
+  -- Cabal build
+  
+  -- Cabal run
