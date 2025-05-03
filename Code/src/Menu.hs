@@ -3,7 +3,8 @@
 -- src/Menu.hs
 module Menu where
 import Trabajadores (Trabajador(..), cargarTrabajadores)
-import OpcionesOperativas (registrarHerramientas, registerParcel, searchParcel)  
+import OpcionesOperativas (registrarHerramientas, registerParcel, searchParcel)
+import OpcionesGenerales (gestionCosechasMenu)
 import Data.List (find) 
 import System.IO (hFlush, stdout)
 
@@ -77,7 +78,7 @@ opcionesGeneralesMenu = do
     
     opcion <- getLine
     case opcion of
-        "1" -> do putStrLn "\nEntrando a gestión de cosechas...\n"; opcionesGeneralesMenu
+        "1" -> gestionCosechasMenu >> opcionesGeneralesMenu
         "2" -> do putStrLn "\nProcesando cierre de cosecha...\n"; opcionesGeneralesMenu
         "3" -> do putStrLn "\nConsultando cosecha...\n"; opcionesGeneralesMenu
         "4" -> do putStrLn "\nCancelando/Modificando cosecha...\n"; opcionesGeneralesMenu
