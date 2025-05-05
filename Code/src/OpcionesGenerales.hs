@@ -1,6 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RecordWildCards #-} -- Permite usar la sintaxis (..) para desestructurar registros automáticamente
+{-# LANGUAGE OverloadedStrings #-} -- Permite usar literales de texto como tipos distintos de String (como Text, ByteString, etc.)
+{-# LANGUAGE DeriveGeneric #-} -- Permite derivar automáticamente instancias de la clase Generic, necesaria para serialización/deserialización
 
 module OpcionesGenerales
     ( gestionCosechasMenu

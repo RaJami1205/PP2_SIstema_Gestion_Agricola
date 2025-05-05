@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase #-} -- Pragma que habilita una sintaxis concisa para trabajar con expresiones case
 
 -- src/Menu.hs
 module Menu where
@@ -73,7 +73,8 @@ opcionesGeneralesMenu = do
     putStrLn "3. Consultar cosecha"
     putStrLn "4. Cancelacelar cosecha"
     putStrLn "5. Modificar cosecha"
-    putStrLn "6. Volver"
+    putStrLn "6. Consulta de disponibilidad de Parcela"
+    putStrLn "7. Volver"
     putStr "Ingrese una opción: " >> hFlush stdout
     
     opcion <- getLine
@@ -83,7 +84,7 @@ opcionesGeneralesMenu = do
         "3" -> consultaCosecha >> opcionesGeneralesMenu
         "4" -> cancelarCosecha >> opcionesGeneralesMenu
         "5" -> modificarCosecha >> opcionesGeneralesMenu
-        "6" -> return ()
+        "7" -> return ()
         _   -> do putStrLn "\n¡Opción inválida!\n"; opcionesGeneralesMenu
 
 mostrarMenu :: IO ()

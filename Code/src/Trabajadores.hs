@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-} -- Permite usar literales de texto como tipos distintos de String (como Text, ByteString, etc.)
 
 -- src/Trabajadores.hs
 module Trabajadores (Trabajador(..), cargarTrabajadores) where

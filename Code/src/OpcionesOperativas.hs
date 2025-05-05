@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE OverloadedStrings #-} -- Permite usar literales de texto como tipos distintos de String (como Text, ByteString, etc.)
+{-# LANGUAGE TypeApplications #-} -- Permite especificar tipos explícitamente usando @Tipo cuando la inferencia no es suficiente
 
 module OpcionesOperativas where
 
