@@ -86,7 +86,7 @@ cabecerasCosecha = V.fromList ["id", "trabajador", "parcela", "fecha_inicio", "f
 
 {-|
 =======================================
-         MÓDULO DE GESTIÓN
+         MÓDULO DE CREACIÓN
 =======================================
 -}
 
