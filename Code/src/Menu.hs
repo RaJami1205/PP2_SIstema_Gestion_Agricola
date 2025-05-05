@@ -4,7 +4,7 @@
 module Menu where
 import Trabajadores (Trabajador(..), cargarTrabajadores)
 import OpcionesOperativas (registrarHerramientas, registerParcel, searchParcel)
-import OpcionesGenerales (gestionCosechasMenu)
+import OpcionesGenerales (gestionCosechasMenu, cierreCosecha, consultaCosecha, cancelarCosecha, modificarCosecha)
 import Data.List (find) 
 import System.IO (hFlush, stdout)
 
@@ -71,18 +71,18 @@ opcionesGeneralesMenu = do
     putStrLn "1. Gestión de cosechas"
     putStrLn "2. Cierre de cosecha"
     putStrLn "3. Consultar cosecha"
-    putStrLn "4. Cancelación o modificación de cosecha"
-    putStrLn "5. Consulta de disponibilidad de parcela"
+    putStrLn "4. Cancelacelar cosecha"
+    putStrLn "5. Modificar cosecha"
     putStrLn "6. Volver"
     putStr "Ingrese una opción: " >> hFlush stdout
     
     opcion <- getLine
     case opcion of
         "1" -> gestionCosechasMenu >> opcionesGeneralesMenu
-        "2" -> do putStrLn "\nProcesando cierre de cosecha...\n"; opcionesGeneralesMenu
-        "3" -> do putStrLn "\nConsultando cosecha...\n"; opcionesGeneralesMenu
-        "4" -> do putStrLn "\nCancelando/Modificando cosecha...\n"; opcionesGeneralesMenu
-        "5" -> do putStrLn "\nConsultando disponibilidad...\n"; opcionesGeneralesMenu
+        "2" -> cierreCosecha >> opcionesGeneralesMenu
+        "3" -> consultaCosecha >> opcionesGeneralesMenu
+        "4" -> cancelarCosecha >> opcionesGeneralesMenu
+        "5" -> modificarCosecha >> opcionesGeneralesMenu
         "6" -> return ()
         _   -> do putStrLn "\n¡Opción inválida!\n"; opcionesGeneralesMenu
 
