@@ -189,6 +189,9 @@ inputVegetales = do
         linea <- TIO.getLine
         if T.null linea
             then return currentMap  -- Terminar si la línea está vacía
+
+            -- TO-DO: VALIDACION PARA QUE NO SE AGREGUEN VEGETALES REPETIDOS
+
             else case T.splitOn ":" linea of
                     [vegetal, precioText] -> 
                         case reads (T.unpack precioText) of
@@ -217,6 +220,9 @@ selectTools availableTools = do
             then return selected  -- Terminar si la línea está vacía
             else if any (\h -> codigo h == code) availableTools
                 then do
+
+                    -- TO-DO: VALIDACION PARA NO INCLUIR LA MISMA HERRAMIENTA
+
                     let newSelected = if code `elem` selected 
                                       then selected 
                                       else code : selected
@@ -249,6 +255,8 @@ registerParcel = do
 
     putStr "Zona de la parcela: " >> hFlush stdout
     zone <- TIO.getLine
+
+    -- TO-DO: VALIDACION PARA NO PARCELAS CON EL MISMO NOMBRE Y ZONA
 
     putStr "Área (m²): " >> hFlush stdout
     areaStr <- getLine
@@ -309,6 +317,9 @@ appendParcelToFile parcel = do
 searchParcel :: IO ()
 searchParcel = do
     putStrLn "\n=== Consultar Parcela ==="
+
+    -- TO-DO: MOSTRAR PARCELAS ID | NOMBRE | ZONA PARA LA SELECCION
+
     putStr "Ingrese el ID de la parcela: " >> hFlush stdout
     parcelId <- TIO.getLine
 
