@@ -1,9 +1,10 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase #-} -- Pragma que habilita una sintaxis concisa para trabajar con expresiones case
 
 -- src/Menu.hs
 module Menu where
 import Trabajadores (Trabajador(..), cargarTrabajadores)
-import OpcionesOperativas (registrarHerramientas, registerParcel, searchParcel)  
+import OpcionesOperativas (registrarHerramientas, registerParcel, searchParcel)
+import OpcionesGenerales (gestionCosechasMenu, cierreCosecha, consultaCosecha, cancelarCosecha, modificarCosecha)
 import Data.List (find) 
 import System.IO (hFlush, stdout)
 
@@ -70,19 +71,20 @@ opcionesGeneralesMenu = do
     putStrLn "1. Gestión de cosechas"
     putStrLn "2. Cierre de cosecha"
     putStrLn "3. Consultar cosecha"
-    putStrLn "4. Cancelación o modificación de cosecha"
-    putStrLn "5. Consulta de disponibilidad de parcela"
-    putStrLn "6. Volver"
+    putStrLn "4. Cancelacelar cosecha"
+    putStrLn "5. Modificar cosecha"
+    putStrLn "6. Consulta de disponibilidad de Parcela"
+    putStrLn "7. Volver"
     putStr "Ingrese una opción: " >> hFlush stdout
     
     opcion <- getLine
     case opcion of
-        "1" -> do putStrLn "\nEntrando a gestión de cosechas...\n"; opcionesGeneralesMenu
-        "2" -> do putStrLn "\nProcesando cierre de cosecha...\n"; opcionesGeneralesMenu
-        "3" -> do putStrLn "\nConsultando cosecha...\n"; opcionesGeneralesMenu
-        "4" -> do putStrLn "\nCancelando/Modificando cosecha...\n"; opcionesGeneralesMenu
-        "5" -> do putStrLn "\nConsultando disponibilidad...\n"; opcionesGeneralesMenu
-        "6" -> return ()
+        "1" -> gestionCosechasMenu >> opcionesGeneralesMenu
+        "2" -> cierreCosecha >> opcionesGeneralesMenu
+        "3" -> consultaCosecha >> opcionesGeneralesMenu
+        "4" -> cancelarCosecha >> opcionesGeneralesMenu
+        "5" -> modificarCosecha >> opcionesGeneralesMenu
+        "7" -> return ()
         _   -> do putStrLn "\n¡Opción inválida!\n"; opcionesGeneralesMenu
 
 mostrarMenu :: IO ()
