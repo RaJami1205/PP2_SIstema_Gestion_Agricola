@@ -8,13 +8,15 @@ module OpcionesGenerales
     , consultaCosecha
     , cancelarCosecha
     , modificarCosecha
+    , checkParcelAvailability
     ) where
 
 import Prelude hiding (id)
 import GHC.Generics (Generic)
 import Trabajadores (Trabajador(..), cedula)
 import Data.Time (formatTime, defaultTimeLocale, getCurrentTime)
-import Data.List (find, isInfixOf, intercalate)
+import Data.List (find, isInfixOf, intercalate, groupBy)
+import Data.Char (toLower, isDigit)
 import System.IO
 import qualified Data.Char as Char
 import System.Random (randomRIO)
@@ -41,6 +43,7 @@ import Control.Monad (when, unless)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as T
+import Text.Printf (printf)
 
 data Parcela = Parcela
     { idParcela :: String
@@ -490,3 +493,204 @@ confirmarCambios cosecha cosechas = do
         else do
             putStrLn "Cambios descartados"
             menuModificacion cosecha cosechas
+
+{-|
+=============================================
+    Consula de disponibilidad de Parcelas
+============================================= -}
+checkParcelAvailability :: IO ()
+checkParcelAvailability = do
+    putStrLn "\n=== Consulta de Disponibilidad de Parcelas ==="
+    putStrLn "1. Listar parcelas disponibles en rango de fechas"
+    putStrLn "2. Mostrar estado de parcelas en rango de fechas"
+    putStrLn "3. Volver"
+    putStr "Seleccione una opción: " >> hFlush stdout
+    
+    opt <- getLine
+    case opt of
+        "1" -> do
+            mRange <- getDateRange
+            case mRange of
+                Nothing -> return ()
+                Just (start, end) -> showAvailableParcels start end
+            checkParcelAvailability
+        "2" -> do
+            mRange <- getDateRange
+            case mRange of
+                Nothing -> return ()
+                Just (start, end) -> showDiaryStateParcels start end
+            checkParcelAvailability
+        "3" -> return ()
+        _   -> do
+            putStrLn "Opción inválida"
+            checkParcelAvailability
+
+-- Función auxiliar para ingreso de fechas con validación y opcion
+dateInput :: String -> IO (Maybe String)
+dateInput prompt = do
+    putStr (prompt ++ " (o 'v' para volver): ") >> hFlush stdout
+    input <- getLine
+    case map toLower input of
+        "v" -> return Nothing
+        _ -> if correctDateFormat input
+                then return (Just input)
+                else do
+                    putStrLn "Formato de fecha inválido. Use dd/mm/aaaa"
+                    dateInput prompt
+
+-- Validación de formato de fecha (dd/mm/aaaa)
+correctDateFormat :: String -> Bool
+correctDateFormat date =
+    case splitOn '/' date of
+        [d,m,a] -> length d == 2 && length m == 2 && length a == 4
+                    && all isDigit (d++m++a)
+        _       -> False
+        
+-- Función para obtener rango de fechas
+getDateRange :: IO (Maybe (String, String))
+getDateRange = do
+    putStrLn "\nIngrese el rango de fechas (dd/mm/aaaa): "
+    mStart <- dateInput "Fecha inicio"
+    case mStart of
+        Nothing -> return Nothing
+        Just start -> do
+            mEnd <- dateInput "Fecha fin"
+            case mEnd of
+                Nothing -> return Nothing
+                Just end -> do
+                    let startDays = dateToDays start
+                        endDays = dateToDays end
+                    if startDays <= endDays
+                        then return (Just (start, end))
+                        else do
+                            putStrLn "Error: La fecha de inicio debe ser antes de la fecha fin"
+                            getDateRange
+
+-- Opción 1: Mostrar parcelas disponibles en alún día del juego
+showAvailableParcels :: String -> String -> IO ()
+showAvailableParcels start end = do
+    parcels <- getAllParcels
+    harvests <- getOpenedHarvests
+
+    let usedParcels = map parcela $ filter (overlapsRange start end) harvests
+    let availableParcels = filter (\p -> idParcela p `notElem` usedParcels) parcels
+
+    putStrLn $ "\nParcelas disponibles entre " ++ start ++ " y " ++ end ++ ":"
+
+    if null availableParcels
+        then putStrLn "No hay parcelas disponibles en el rango especificado"
+        else mapM_ (\p -> putStrLn $ idParcela p ++ " - " ++ nombreParcela p) availableParcels
+  where
+    dateToComparable :: String -> String
+    dateToComparable date = 
+        case splitOn '/' date of
+            [d, m, y] -> y ++ m ++ d
+            _ -> error "Formato de fecha inválido"
+    overlapsRange rangeStart rangeEnd c =
+        let startComp = dateToComparable rangeStart
+            endComp = dateToComparable rangeEnd
+            cStart = dateToComparable (fecha_inicio c)
+            cEnd = dateToComparable (fecha_fin c)
+        in cStart <= endComp && cEnd >= startComp
+
+-- Opción 2: Mostrar estado diario de parcelas
+showDiaryStateParcels :: String -> String -> IO ()
+showDiaryStateParcels start end = do
+
+    parcels <- getAllParcels
+    harvests <- getOpenedHarvests
+
+    let days = generateDays start end
+    let harvestPerParcel = groupBy (\a b -> parcela a == parcela b) harvests
+
+    putStrLn $ "\nEstado diario de parcelas entre " ++ start ++ " y " ++ end ++ ":"
+    mapM_ (\p -> do
+        putStrLn $ "\n" ++ idParcela p ++ " - " ++ nombreParcela p
+        mapM_ (\day -> do
+            let used = any (\c -> isInDate day c) harvests
+            putStrLn $ "    " ++ day ++ ": " ++ if used then "No disponible" else "Disponible"
+            ) days
+        ) parcels
+
+-- Funciones auxiliares
+
+getAllParcels :: IO [Parcela]
+getAllParcels = do
+    exists <- doesFileExist "data/parcelas.csv"
+    if not exists then return [] else do
+        contenido <- BL.readFile "data/parcelas.csv"
+        case decodeByName contenido of
+            Left _ -> return []
+            Right (_, parcels) -> return $ V.toList parcels
+
+getAllHarvests :: IO [Cosecha]
+getAllHarvests = do
+    exists <- doesFileExist "data/cosechas.csv"
+    if not exists then return [] else do
+        contenido <- BL.readFile "data/cosechas.csv"
+        case decodeByName contenido of
+            Left _ -> return []
+            Right (_, harvests) -> return $ V.toList harvests
+
+getOpenedHarvests :: IO [Cosecha]
+getOpenedHarvests = do
+    exists <- doesFileExist "data/cosechas.csv"
+    if not exists then return [] else do
+        contenido <- BL.readFile "data/cosechas.csv"
+        case decodeByName contenido of
+            Left _ -> return []
+            Right (_, harvests) -> return $ filter ((== "abierto") . estado) $ V.toList harvests
+
+isInRange :: String -> String -> Cosecha -> Bool
+isInRange start end c =
+    (fecha_inicio c >= start && fecha_inicio c <= end) ||
+    (fecha_fin c >= start && fecha_fin c <= end)
+
+dateToDays :: String -> Int
+dateToDays date = 
+    case splitOn '/' date of
+        [d, m, y] -> 
+            let day = read d
+                month = read m
+                year = read y
+            in year * 365 + month * 30 + day
+        _ -> error "Formato de fecha inválido"
+
+isInDate :: String -> Cosecha -> Bool
+isInDate date c = 
+        let day = dateToDays date
+            start = dateToDays (fecha_inicio c)
+            end = dateToDays (fecha_fin c)
+        in day >= start && day <= end
+
+generateDays :: String -> String -> [String]
+generateDays start end =
+    if start == end
+        then [start]
+        else start : generateDays (nextDay start) end
+
+nextDay :: String -> String
+nextDay date =
+    case splitOn '/' date of
+        [d, m, y] ->
+            let day = read d :: Int
+                month = read m :: Int
+                year = read y :: Int
+                (newDay, newMonth, newYear) = addDay day month year
+            in printf "%02d/%02d/%04d" newDay newMonth newYear
+        _ -> error "Formato de fecha inválido"
+  where
+    addDay :: Int -> Int -> Int -> (Int, Int, Int)
+    addDay d m y
+        | d < daysInMonth m y = (d+1, m, y)
+        | m < 12 = (1, m+1, y)
+        | otherwise = (1, 1, y+1)
+    
+    daysInMonth :: Int -> Int -> Int
+    daysInMonth m y
+        | m `elem` [4,6,9,11] = 30
+        | m == 2 = if isLeapYear y then 29 else 28
+        | otherwise = 31
+    
+    isLeapYear :: Int -> Bool
+    isLeapYear y = (y `mod` 4 == 0 && y `mod` 100 /= 0) || y `mod` 400 == 0

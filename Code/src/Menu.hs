@@ -4,7 +4,7 @@
 module Menu where
 import Trabajadores (Trabajador(..), cargarTrabajadores)
 import OpcionesOperativas (registrarHerramientas, registerParcel, searchParcel)
-import OpcionesGenerales (gestionCosechasMenu, cierreCosecha, consultaCosecha, cancelarCosecha, modificarCosecha)
+import OpcionesGenerales (gestionCosechasMenu, cierreCosecha, consultaCosecha, cancelarCosecha, modificarCosecha, checkParcelAvailability)
 import Data.List (find) 
 import System.IO (hFlush, stdout)
 
@@ -84,6 +84,7 @@ opcionesGeneralesMenu = do
         "3" -> consultaCosecha >> opcionesGeneralesMenu
         "4" -> cancelarCosecha >> opcionesGeneralesMenu
         "5" -> modificarCosecha >> opcionesGeneralesMenu
+        "6" -> checkParcelAvailability >> opcionesGeneralesMenu
         "7" -> return ()
         _   -> do putStrLn "\n¡Opción inválida!\n"; opcionesGeneralesMenu
 
