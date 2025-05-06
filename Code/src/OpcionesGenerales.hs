@@ -191,7 +191,6 @@ registrarCosecha = do
         
         when existeParc $ do
             vegetales <- obtenerVegetalesPermitidos pid
-            putStrLn $ "\nVegetales permitidos: " ++ intercalate ", " vegetales
             when (null vegetales) $ do
                 putStrLn "Error: Parcela no tiene vegetales configurados"
                 return ()
