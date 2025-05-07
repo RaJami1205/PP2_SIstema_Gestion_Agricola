@@ -14,7 +14,8 @@ module OpcionesGenerales
 import Prelude hiding (id)
 import GHC.Generics (Generic)
 import Trabajadores (Trabajador(..), cedula)
-import Data.Time (formatTime, defaultTimeLocale, getCurrentTime)
+import Data.Time (formatTime, defaultTimeLocale, getCurrentTime, Day, parseTimeOrError)
+import Data.Time.Format (parseTimeM)
 import Data.List (find, isInfixOf, intercalate, groupBy)
 import Data.Char (toLower, isDigit)
 import System.IO
@@ -44,6 +45,16 @@ import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as T
 import Text.Printf (printf)
+
+parseFecha :: String -> Day
+parseFecha = parseTimeOrError True defaultTimeLocale "%d/%m/%Y"
+
+entre :: String -> (String, String) -> Bool
+entre fecha (inicio, fin) = 
+    let f = parseFecha fecha
+        i = parseFecha inicio
+        e = parseFecha fin
+    in f >= i && f <= e
 
 data Parcela = Parcela
     { idParcela :: String
@@ -151,15 +162,14 @@ verificarDisponibilidad parcelaId inicio fin excluirId = do
             contenido <- BL.readFile "data/cosechas.csv"
             case decodeByName contenido of
                 Left _ -> return True
-                Right (_, cosechas) -> return $ not $ any (solapamiento inicio fin excluirId) (V.toList cosechas)
+                Right (_, cosechas) -> 
+                    return $ not $ any (solapamiento inicio fin excluirId) (V.toList cosechas)
   where
     solapamiento i f e c = 
         parcela c == parcelaId && 
         maybe True (/= id c) e &&  
-        (fecha_inicio c `entre` (i, f) || 
-         fecha_fin c `entre` (i, f))
-    
-    entre fecha (inicio, fin) = fecha >= inicio && fecha <= fin
+        (entre (fecha_inicio c) (i, f) || 
+         entre (fecha_fin c) (i, f))
 
 -- Guardar cosecha en CSV
 guardarCosecha :: Cosecha -> IO ()
@@ -217,7 +227,7 @@ registrarCosecha = do
                 esValido <- verificarVegetal pid veg
                 unless esValido $ do
                     putStrLn "Error: Vegetal no permitido en esta parcela"
-                    return ()
+                    registrarCosecha
                 
                 putStr "Cantidad a recolectar (kg): " >> hFlush stdout
                 cantStr <- getLine
@@ -450,19 +460,22 @@ modificarParcela cosecha cosechas = do
 
 modificarFechas :: Cosecha -> V.Vector Cosecha -> IO ()
 modificarFechas cosecha cosechas = do
-    putStr "Nueva fecha inicio (actual: " >> putStr (fecha_inicio cosecha) >> putStr "): " >> hFlush stdout
+    putStr "Nueva fecha inicio (DD/MM/YYYY): " >> hFlush stdout
     nuevaInicio <- getLine
-    putStr "Nueva fecha fin (actual: " >> putStr (fecha_fin cosecha) >> putStr "): " >> hFlush stdout
+    putStr "Nueva fecha fin (DD/MM/YYYY): " >> hFlush stdout
     nuevaFin <- getLine
     
-    disponible <- verificarDisponibilidad (parcela cosecha) nuevaInicio nuevaFin (Just (id cosecha))
-    if not disponible
-        then do
-            putStrLn "Error: Parcela no disponible en esas fechas"
-            menuModificacion cosecha cosechas
-        else do
-            let cosechaMod = cosecha { fecha_inicio = nuevaInicio, fecha_fin = nuevaFin }
-            menuModificacion cosechaMod cosechas
+    -- Verifica formato primero
+    case (parseTimeM True defaultTimeLocale "%d/%m/%Y" nuevaInicio :: Maybe Day,
+          parseTimeM True defaultTimeLocale "%d/%m/%Y" nuevaFin :: Maybe Day) of
+        (Nothing, _) -> putStrLn "Formato de fecha inicio inválido"
+        (_, Nothing) -> putStrLn "Formato de fecha fin inválido"
+        (Just _, Just _) -> do
+            disponible <- verificarDisponibilidad (parcela cosecha) nuevaInicio nuevaFin (Just (id cosecha))
+            if not disponible
+                then putStrLn "Error: Parcela no disponible en esas fechas"
+                else let cosechaMod = cosecha { fecha_inicio = nuevaInicio, fecha_fin = nuevaFin }
+                     in menuModificacion cosechaMod cosechas
 
 modificarVegetal :: Cosecha -> V.Vector Cosecha -> IO ()
 modificarVegetal cosecha cosechas = do
@@ -476,7 +489,7 @@ modificarVegetal cosecha cosechas = do
             menuModificacion cosecha cosechas
         else do
             let cosechaMod = cosecha { vegetal = nuevoVegetal }
-            menuModificacion cosechaMod cosechas
+            menuModificacion cosecha cosechas
 
 -- Confirmar y guardar cambios
 confirmarCambios :: Cosecha -> V.Vector Cosecha -> IO ()
