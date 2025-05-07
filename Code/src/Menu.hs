@@ -35,8 +35,8 @@ parcelMenu = do
     opt <- getLine
 
     case opt of
-        "1" -> registerParcel >> opcionesOperativas
-        "2" -> searchParcel >> opcionesOperativas
+        "1" -> registerParcel >> parcelMenu
+        "2" -> searchParcel >> parcelMenu
         "3" -> mainMenu
         _   -> do
             putStrLn "\nOpción no implementada aún.\n"
@@ -56,7 +56,7 @@ opcionesOperativas = do
     opcion <- getLine
     case opcion of
         "1" -> registrarHerramientas >> opcionesOperativas
-        "2" -> parcelMenu
+        "2" -> parcelMenu >> opcionesOperativas
         "3" -> generarInformeCosechas >> opcionesOperativas
         "4" -> mainMenu
         _   -> do

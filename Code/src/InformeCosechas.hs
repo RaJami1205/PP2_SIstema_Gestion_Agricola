@@ -61,7 +61,7 @@ generarInformeCosechas = do
             
             if null cosechasCerradas
                 then putStrLn "\nNo hay cosechas cerradas para generar estadísticas."
-                else generarEstadisticas cosechasCerradas
+                else generarEstadisticas cosechasCerradas todasCosechas
 
 -- Función para leer todas las cosechas desde el archivo CSV
 leerTodasLasCosechas :: IO (Either String [Cosecha])
@@ -83,7 +83,7 @@ esCosechaCerrada estado = T.toLower estado == "cerrado"
 mostrarInformacionBasica :: [Cosecha] -> IO ()
 mostrarInformacionBasica cosechas = do
     putStrLn "\n=== Todas las Cosechas Registradas ==="
-    putStrLn "Estado   ID      Parcela    Vegetal        Fecha Inicio  Fecha Fin      Cantidad (kg) Trabajador     "
+    putStrLn "Estado   ID      Parcela    Vegetal        Fecha Inicio  Fecha Fin      Cantidad (kg) Trabajador  "
     putStrLn "----------------------------------------------------------------------------------------------------"
     mapM_ mostrarCosecha cosechas
     putStrLn ""
@@ -101,8 +101,8 @@ mostrarCosecha Cosecha{..} =
         (T.unpack trabajador)
 
 -- Generar todas las estadísticas
-generarEstadisticas :: [Cosecha] -> IO ()
-generarEstadisticas cosechasCerradas = do
+generarEstadisticas :: [Cosecha] -> [Cosecha] -> IO ()
+generarEstadisticas cosechasCerradas todasCosechas = do
     putStrLn "\n=== Estadísticas ==="
     
     -- 1. Parcela con mayor volumen de cosecha
@@ -115,7 +115,8 @@ generarEstadisticas cosechasCerradas = do
     mapM_ (\(p, v) -> putStrLn $ " - " ++ T.unpack p ++ ": " ++ show v ++ " kg") topParcelas
     
     -- 3. Trabajador con más cosechas realizadas
-    let trabajadorMasCosechas = obtenerTrabajadorMasCosechas cosechasCerradas
+    -- DEBE CONSIDERAR TAMBIEN COSECHAS ABIERTAS
+    let trabajadorMasCosechas = obtenerTrabajadorMasCosechas todasCosechas
     putStrLn $ "\n3. Trabajador con más cosechas realizadas: " ++ T.unpack trabajadorMasCosechas
     
     -- 4. Mes-Año con mayor recolección acumulada

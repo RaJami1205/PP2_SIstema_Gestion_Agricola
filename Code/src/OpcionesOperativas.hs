@@ -189,19 +189,21 @@ inputVegetales = do
         linea <- TIO.getLine
         if T.null linea
             then return currentMap  -- Terminar si la línea está vacía
-
-            -- TO-DO: VALIDACION PARA QUE NO SE AGREGUEN VEGETALES REPETIDOS
-
             else case T.splitOn ":" linea of
-                    [vegetal, precioText] -> 
-                        case reads (T.unpack precioText) of
+                [vegetal, precioText] -> 
+                    if Map.member vegetal currentMap
+                        then do
+                            putStrLn "Error: Ese vegetal ya fue ingresado."
+                            loop currentMap
+                        else case reads (T.unpack precioText) of
                             [(precio, "")] -> loop (Map.insert vegetal precio currentMap)
                             _ -> do
                                 putStrLn "Error: Precio inválido. Use formato: vegetal:precio (ej. tomate:1.5)"
                                 loop currentMap
-                    _ -> do
-                        putStrLn "Error: Formato inválido. Use vegetal:precio (ej. tomate:1.5)"
-                        loop currentMap
+                _ -> do
+                    putStrLn "Error: Formato inválido. Use vegetal:precio (ej. tomate:1.5)"
+                    loop currentMap
+
 
 -- Función auxiliar para seleccionar herramientas en bucle
 selectTools :: [Herramienta] -> IO [Text]
@@ -211,26 +213,26 @@ selectTools availableTools = do
     mapM_ (putStrLn . formatHerramienta) availableTools
     putStrLn "\nIngrese los códigos de las herramientas (presione Enter para terminar):"
     loop []
-  where
-    loop :: [Text] -> IO [Text]
-    loop selected = do
-        putStr "> " >> hFlush stdout
-        code <- TIO.getLine
-        if T.null code
-            then return selected  -- Terminar si la línea está vacía
-            else if any (\h -> codigo h == code) availableTools
-                then do
+    where
+        loop :: [Text] -> IO [Text]
+        loop selected = do
+            putStr "> " >> hFlush stdout
+            code <- TIO.getLine
+            if T.null code
+                then return selected  -- Terminar si la línea está vacía
+                else if any (\h -> codigo h == code) availableTools
+                    then 
+                        if code `elem` selected
+                            then do
+                                putStrLn "Ya seleccionó esta herramienta."
+                                loop selected
+                            else do
+                                putStrLn $ "Herramienta añadida: " <> T.unpack code
+                                loop (code : selected)
+                    else do
+                        putStrLn "Error: Código no válido. Intente nuevamente."
+                        loop selected
 
-                    -- TO-DO: VALIDACION PARA NO INCLUIR LA MISMA HERRAMIENTA
-
-                    let newSelected = if code `elem` selected 
-                                      then selected 
-                                      else code : selected
-                    putStrLn $ "Herramienta añadida: " <> T.unpack code
-                    loop newSelected
-                else do
-                    putStrLn "Error: Código no válido. Intente nuevamente."
-                    loop selected
 
 -- Función para crear un ID de 6 caracteres
 generateShortId :: IO Text
@@ -256,37 +258,55 @@ registerParcel = do
     putStr "Zona de la parcela: " >> hFlush stdout
     zone <- TIO.getLine
 
-    -- TO-DO: VALIDACION PARA NO PARCELAS CON EL MISMO NOMBRE Y ZONA
-
-    putStr "Área (m²): " >> hFlush stdout
-    areaStr <- getLine
-    let area = read areaStr :: Double
-
-    -- Registrar Vegetales y Precios
-    vegetables <- inputVegetales
-
-    -- Selección de herramientas con bucle
-    availableTools <- loadAvailableTools
-    asignedTools <- if null availableTools
+    existingParcel <- existsParcel name zone
+    if existingParcel
         then do
-            putStrLn "\nNo hay herramientas disponibles."
-            return []
-        else selectTools availableTools
+            putStrLn "\nYa existe una parcela con ese nombre en esa zona."
+            return ()
+        else do
+            putStr "Área (m²): " >> hFlush stdout
+            areaStr <- getLine
+            let area = read areaStr :: Double
 
-    -- Crear la parcela
-    let newParcel = Parcel {
-        parcelId = parcelId,
-        name = name,
-        zone = zone,
-        area = area,
-        vegetables = vegetables,
-        asignedTools = asignedTools
-    }
+            -- Registrar Vegetales y Precios
+            vegetables <- inputVegetales
 
-    -- Guardar en CSV
-    appendParcelToFile newParcel
-    putStrLn "\nParcela registrada exitosamente!"
-    putStrLn $ "ID generado: " <> T.unpack parcelId
+            -- Selección de herramientas con bucle
+            availableTools <- loadAvailableTools
+            asignedTools <- if null availableTools
+                then do
+                    putStrLn "\nNo hay herramientas disponibles."
+                    return []
+                else selectTools availableTools
+
+            -- Crear la parcela
+            let newParcel = Parcel {
+                parcelId = parcelId,
+                name = name,
+                zone = zone,
+                area = area,
+                vegetables = vegetables,
+                asignedTools = asignedTools
+            }
+
+            -- Guardar en CSV
+            appendParcelToFile newParcel
+            putStrLn "\nParcela registrada exitosamente!"
+            putStrLn $ "ID generado: " <> T.unpack parcelId
+            putStrLn ""
+
+existsParcel :: Text -> Text -> IO Bool
+existsParcel nombre zona = do
+    exists <- doesFileExist "data/parcelas.csv"
+    if not exists
+        then return False
+        else do
+            csvData <- BL.readFile "data/parcelas.csv"
+            case decodeByName csvData of
+                Left _ -> return False
+                Right (_, parcelas) ->
+                    return $ any (\p -> name p == nombre && zone p == zona) (V.toList parcelas)
+
 
 -- Función auxiliar para cargar herramientas disponibles
 loadAvailableTools :: IO [Herramienta]
@@ -318,9 +338,9 @@ searchParcel :: IO ()
 searchParcel = do
     putStrLn "\n=== Consultar Parcela ==="
 
-    -- TO-DO: MOSTRAR PARCELAS ID | NOMBRE | ZONA PARA LA SELECCION
+    showParcelResume
 
-    putStr "Ingrese el ID de la parcela: " >> hFlush stdout
+    putStr "\nIngrese el ID de la parcela: " >> hFlush stdout
     parcelId <- TIO.getLine
 
     csvData <- BL.readFile "data/parcelas.csv"
@@ -328,6 +348,23 @@ searchParcel = do
         Left err -> putStrLn err
         Right Nothing -> putStrLn "Parcela no encontrada"
         Right (Just parcel) -> displayParcelInfo parcel
+
+showParcelResume :: IO ()
+showParcelResume = do
+    exists <- doesFileExist "data/parcelas.csv"
+    if not exists
+        then putStrLn "No hay parcelas registradas aún."
+        else do
+            csvData <- BL.readFile "data/parcelas.csv"
+            case decodeByName csvData of
+                Left err -> putStrLn $ "Error al leer parcelas: " ++ err
+                Right (_, parcelas) -> do
+                    putStrLn "\nID       | Nombre                        | Zona"
+                    putStrLn "-------------------------------------------------------"
+                    mapM_ (\p -> printf "%-8s | %-29s | %-10s\n"
+                                (T.unpack $ parcelId p)
+                                (T.unpack $ name p)
+                                (T.unpack $ zone p)) (V.toList parcelas)
 
 -- Función pura para buscar parcela por ID
 findParcelById :: Text -> BL.ByteString -> Either String (Maybe Parcel)
