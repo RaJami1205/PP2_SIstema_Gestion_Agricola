@@ -5,6 +5,7 @@ module Menu where
 import Trabajadores (Trabajador(..), cargarTrabajadores)
 import OpcionesOperativas (registrarHerramientas, registerParcel, searchParcel)
 import OpcionesGenerales (gestionCosechasMenu, cierreCosecha, consultaCosecha, cancelarCosecha, modificarCosecha, checkParcelAvailability)
+import InformeCosechas (generarInformeCosechas)
 import Data.List (find) 
 import System.IO (hFlush, stdout)
 
@@ -44,7 +45,7 @@ parcelMenu = do
 -- Submenú de opciones operativas 
 opcionesOperativas :: IO ()
 opcionesOperativas = do
-    putStrLn "=================================="
+    putStrLn "\n=================================="
     putStrLn "=      Opciones Operativas       ="
     putStrLn "=================================="
     putStrLn "1. Registrar Herramientas de Campo"
@@ -56,7 +57,7 @@ opcionesOperativas = do
     case opcion of
         "1" -> registrarHerramientas >> opcionesOperativas
         "2" -> parcelMenu
-        "3" -> mainMenu
+        "3" -> generarInformeCosechas >> opcionesOperativas
         "4" -> mainMenu
         _   -> do
             putStrLn "\nOpción no implementada aún.\n"

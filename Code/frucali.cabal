@@ -10,6 +10,7 @@ executable frucali
                   , OpcionesOperativas
                   , Trabajadores
                   , OpcionesGenerales
+                  , InformeCosechas
   build-depends:    base >=4.17 && <5
                   , text
                   , directory
