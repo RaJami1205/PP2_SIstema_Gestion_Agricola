@@ -595,18 +595,18 @@ showAvailableParcels start end = do
 -- Opción 2: Mostrar estado diario de parcelas
 showDiaryStateParcels :: String -> String -> IO ()
 showDiaryStateParcels start end = do
-
     parcels <- getAllParcels
     harvests <- getOpenedHarvests
 
     let days = generateDays start end
-    let harvestPerParcel = groupBy (\a b -> parcela a == parcela b) harvests
-
+    
     putStrLn $ "\nEstado diario de parcelas entre " ++ start ++ " y " ++ end ++ ":"
+    
     mapM_ (\p -> do
         putStrLn $ "\n" ++ idParcela p ++ " - " ++ nombreParcela p
+        let parcelHarvests = filter (\c -> parcela c == idParcela p) harvests
         mapM_ (\day -> do
-            let used = any (\c -> isInDate day c) harvests
+            let used = any (\c -> isInDate day c) parcelHarvests
             putStrLn $ "    " ++ day ++ ": " ++ if used then "No disponible" else "Disponible"
             ) days
         ) parcels
