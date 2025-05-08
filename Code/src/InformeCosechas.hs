@@ -3,6 +3,8 @@
 
 module InformeCosechas where
 
+import Trabajadores (Trabajador(..), cargarTrabajadores)
+
 import Data.Csv
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Vector as V
@@ -114,10 +116,17 @@ generarEstadisticas cosechasCerradas todasCosechas = do
     putStrLn "\n2. Top 3 parcelas con mayor volumen de cosecha:"
     mapM_ (\(p, v) -> putStrLn $ " - " ++ T.unpack p ++ ": " ++ show v ++ " kg") topParcelas
     
-    -- 3. Trabajador con más cosechas realizadas
-    -- DEBE CONSIDERAR TAMBIEN COSECHAS ABIERTAS
-    let trabajadorMasCosechas = obtenerTrabajadorMasCosechas todasCosechas
-    putStrLn $ "\n3. Trabajador con más cosechas realizadas: " ++ T.unpack trabajadorMasCosechas
+    
+    -- 3. Trabajador con más cosechas realizadas (incluye abiertas)
+    let trabajadorMasCosechasCed = obtenerTrabajadorMasCosechas todasCosechas
+    trabajadoresResult <- cargarTrabajadores "data/trabajadores.csv"
+    case trabajadoresResult of
+        Left err -> putStrLn $ "\n3. Trabajador con más cosechas realizadas: " ++ T.unpack trabajadorMasCosechasCed ++ " (error cargando nombres: " ++ err ++ ")"
+        Right trabajadores -> do
+            let nombreCompleto = case Prelude.lookup (T.unpack trabajadorMasCosechasCed) [(cedula t, nombre t) | t <- trabajadores] of
+                                    Just nom -> nom
+                                    Nothing -> "(nombre no encontrado)"
+            putStrLn $ "\n3. Trabajador con más cosechas realizadas: " ++ T.unpack trabajadorMasCosechasCed ++ " - " ++ nombreCompleto
     
     -- 4. Mes-Año con mayor recolección acumulada
     let mejorMesAnio = obtenerMejorMesAnio cosechasCerradas
